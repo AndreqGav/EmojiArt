@@ -57,10 +57,23 @@ class EmojiArtDocument: ObservableObject, Hashable, Identifiable, Equatable {
         }
     }
     
+    func moveEmoji(_ emoji: EmojiArt.Emoji, to location: CGPoint) {
+        if let index = emojiArt.emojis.firstIndex(matching: emoji) {
+            emojiArt.emojis[index].x = Int(location.x)
+            emojiArt.emojis[index].y = Int(location.y)
+        }
+    }
+    
     func scaleEmoji(_ emoji: EmojiArt.Emoji, by scale: CGFloat) {
         if let index = emojiArt.emojis.firstIndex(matching: emoji) {
             emojiArt.emojis[index].size = Int(CGFloat(emojiArt.emojis[index].size) * scale
                 .rounded(.toNearestOrEven))
+        }
+    }
+    
+    func scaleEmoji(_ emoji: EmojiArt.Emoji, at scale: CGFloat) {
+        if let index = emojiArt.emojis.firstIndex(matching: emoji) {
+            emojiArt.emojis[index].size = Int(scale.rounded(.toNearestOrEven))
         }
     }
     

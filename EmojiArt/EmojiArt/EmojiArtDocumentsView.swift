@@ -55,6 +55,8 @@ struct EmojiArtDocumentsView: View {
                             Text(emoji.text)
                                 .font(animatableWithSize: emoji.fontSize * zoomScale)
                                 .position(self.position(for: emoji, in: geometry.size))
+                                .gesture(dragEmojiGesture(emoji: emoji, geometry: geometry))
+                                .gesture(zoomEmojiGesture(emoji: emoji))
                         }
                     }
                 }
@@ -67,7 +69,7 @@ struct EmojiArtDocumentsView: View {
                     zoomToFit(image, in: geometry.size)
                 }
                 .onDrop(of: ["public.image", "public.text"], isTargeted: nil) { providers, location in
-                    var location = geometry.convert(location, from: .global)
+                    var location = geometry.convert(location, from: .local)
                     location = CGPoint(x: location.x - geometry.size.width/2, y: location.y - geometry.size.height/2)
                     location = CGPoint(x: location.x - panOffset.width, y: location.y - panOffset.height)
                     location = CGPoint(x: location.x / zoomScale, y: location.y / zoomScale)
@@ -102,7 +104,7 @@ struct EmojiArtDocumentsView: View {
     }
     
     @GestureState private var gestureZoomScale: CGFloat = 1.0
-    
+    @State private var isEmojiGesture = false
     
     private var zoomScale: CGFloat {
         self.document.steadyStateZoomScale * gestureZoomScale
@@ -111,10 +113,32 @@ struct EmojiArtDocumentsView: View {
     private func zoomGesture() -> some Gesture {
         MagnificationGesture()
             .updating($gestureZoomScale) { latestGestureScale, gestureZoomScale, transaction in
-                gestureZoomScale = latestGestureScale
+                if !isEmojiGesture {
+                    gestureZoomScale = latestGestureScale
+                }
             }
             .onEnded { finalGestureScale in
                 self.document.steadyStateZoomScale *= finalGestureScale
+            }
+    }
+    
+    @State private var startScaleValue: Int = 0
+    private func zoomEmojiGesture(emoji: EmojiArt.Emoji) -> some Gesture {
+        MagnificationGesture()
+            .onChanged { magnificationGestureValue in
+                if !isEmojiGesture {
+                    startScaleValue = emoji.size
+                }
+                isEmojiGesture = true
+                let scaleFactor = CGFloat(startScaleValue) * magnificationGestureValue
+                print(magnificationGestureValue)
+                print(magnificationGestureValue.magnitude)
+                print("      ")
+  
+                document.scaleEmoji(emoji, at: scaleFactor)
+            }
+            .onEnded { finalGestureScale in
+                isEmojiGesture = false
             }
     }
     
@@ -156,11 +180,21 @@ struct EmojiArtDocumentsView: View {
             }
     }
     
+    private func dragEmojiGesture(emoji: EmojiArt.Emoji, geometry: GeometryProxy) -> some Gesture {
+        DragGesture()
+            .onChanged { dragValue in
+                let dragLocation = dragValue.startLocation
+                var location = geometry.convert(dragLocation, from: .local)
+                location = CGPoint(x: location.x - geometry.size.width/2, y: location.y - geometry.size.height/2)
+                location = CGPoint(x: location.x - panOffset.width, y: location.y - panOffset.height)
+                location = CGPoint(x: location.x / zoomScale, y: location.y / zoomScale)
+                document.moveEmoji(emoji, to: location + dragValue.translation / zoomScale)
+            }
+    }
     
     private func font(for emoji: EmojiArt.Emoji) -> Font {
         Font.system(size: emoji.fontSize)
     }
-    
     
     private func position(for emoji: EmojiArt.Emoji, in size: CGSize) -> CGPoint {
         var location = emoji.location
@@ -185,6 +219,7 @@ struct EmojiArtDocumentsView: View {
         
         return found
     }
+
 }
 
 //struct ContentView_Previews: PreviewProvider {
