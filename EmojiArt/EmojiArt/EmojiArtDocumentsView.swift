@@ -130,15 +130,12 @@ struct EmojiArtDocumentsView: View {
                     startScaleValue = emoji.size
                 }
                 isEmojiGesture = true
-                let scaleFactor = CGFloat(startScaleValue) * magnificationGestureValue
-                print(magnificationGestureValue)
-                print(magnificationGestureValue.magnitude)
-                print("      ")
   
-                document.scaleEmoji(emoji, at: scaleFactor)
+                document.scaleEmoji(emoji, at: CGFloat(startScaleValue) * magnificationGestureValue)
             }
             .onEnded { finalGestureScale in
                 isEmojiGesture = false
+                startScaleValue = 0
             }
     }
     

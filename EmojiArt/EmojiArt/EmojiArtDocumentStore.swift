@@ -23,12 +23,20 @@ class EmojiArtDocumentStore: ObservableObject
         documentNames[document] = name
     }
     
+    func getById(_ id: UUID?) -> EmojiArtDocument? {
+        documentNames.first(where: {$0.key.id == id})?.key
+    }
+    
     var documents: [EmojiArtDocument] {
         documentNames.keys.sorted { documentNames[$0]! < documentNames[$1]! }
     }
     
-    func addDocument(named name: String = "Untitled") {
-        documentNames[EmojiArtDocument()] = name
+    @discardableResult
+    func addDocument(named name: String = "Untitled") -> EmojiArtDocument {
+        let newDocument = EmojiArtDocument()
+        documentNames[newDocument] = name
+        return newDocument
+        
     }
 
     func removeDocument(_ document: EmojiArtDocument) {
