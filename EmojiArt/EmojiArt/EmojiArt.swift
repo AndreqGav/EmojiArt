@@ -57,6 +57,6 @@ struct EmojiArt : Codable {
     
     mutating func addImage(_ url: URL) {
         uniqueEmojiId += 1
-        emojis.append(Emoji(id: uniqueEmojiId, text: "THIS IS IMAGE", x: 0, y: 0, size: 10, url: url))
+        emojis.append(Emoji(id: uniqueEmojiId, text: url.absoluteString, x: 0, y: 0, size: 10, url: url))
     }
 }

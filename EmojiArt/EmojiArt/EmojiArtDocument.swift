@@ -111,22 +111,23 @@ class EmojiArtDocument: ObservableObject, Hashable, Identifiable, Equatable {
         }
     }
     
-    private var fetchImagesCancellable: AnyCancellable?
+    private var fetchImagesCancellable = Set<AnyCancellable>()
     
     private func fetchEmojiImages() {
-        fetchImagesCancellable?.cancel()
+        fetchImagesCancellable.removeAll()
         
         for emoji in emojis.filter({$0.url != nil}) {
             if !images.contains(where: {$0.key == emoji.text}) {
                 let url = emoji.url!.imageURL
                 
-                fetchImagesCancellable = URLSession.shared.dataTaskPublisher(for: url)
+                URLSession.shared.dataTaskPublisher(for: url)
                     .map { data, urlError in UIImage(data: data) }
                     .receive(on: DispatchQueue.main)
                     .replaceError(with: nil)
                     .sink {(image) in
                         self.images[emoji.text] = image
                     }
+                    .store(in: &fetchImagesCancellable)
             }
         }
     }
