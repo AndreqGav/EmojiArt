@@ -2,7 +2,7 @@
 //  Spinning.swift
 //  EmojiArt
 //
-//  Created by Виолетточка on 17.01.2023.
+//  Created by andreq on 17.01.2023.
 //
 
 import SwiftUI

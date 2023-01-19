@@ -2,7 +2,7 @@
 //  EmojiArtDocuments.swift
 //  EmojiArt
 //
-//  Created by Виолетточка on 16.01.2023.
+//  Created by andreq on 16.01.2023.
 //
 
 import SwiftUI
@@ -37,10 +37,12 @@ class EmojiArtDocument: ObservableObject, Hashable, Identifiable, Equatable {
             UserDefaults.standard.set(emojiArt.json, forKey: defaultKey)
         }
         fetchBackgroundImageData()
+        fetchEmojiImages()
     }
     
     
     @Published private(set) var backgroundImage: UIImage?
+    @Published private(set) var images: [String:UIImage] = [:]
     
     
     var emojis: [EmojiArt.Emoji] { emojiArt.emojis }
@@ -48,6 +50,13 @@ class EmojiArtDocument: ObservableObject, Hashable, Identifiable, Equatable {
     // MARK - Intent(S)
     func addEmoji(_ emoji: String, at location: CGPoint, size: CGFloat) {
         emojiArt.addEmoji(emoji, x: Int(location.x), y: Int(location.y), size: Int(size))
+    }
+    
+    func addImage(_ url: URL?) {
+        if url != nil {
+            emojiArt.addImage(url!)
+            fetchEmojiImages()
+        }
     }
     
     func moveEmoji(_ emoji: EmojiArt.Emoji, by offset: CGSize) {
@@ -99,6 +108,26 @@ class EmojiArtDocument: ObservableObject, Hashable, Identifiable, Equatable {
                 .receive(on: DispatchQueue.main)
                 .replaceError(with: nil)
                 .assign(to: \.backgroundImage, on: self)
+        }
+    }
+    
+    private var fetchImagesCancellable: AnyCancellable?
+    
+    private func fetchEmojiImages() {
+        fetchImagesCancellable?.cancel()
+        
+        for emoji in emojis.filter({$0.url != nil}) {
+            if !images.contains(where: {$0.key == emoji.text}) {
+                let url = emoji.url!.imageURL
+                
+                fetchImagesCancellable = URLSession.shared.dataTaskPublisher(for: url)
+                    .map { data, urlError in UIImage(data: data) }
+                    .receive(on: DispatchQueue.main)
+                    .replaceError(with: nil)
+                    .sink {(image) in
+                        self.images[emoji.text] = image
+                    }
+            }
         }
     }
 }

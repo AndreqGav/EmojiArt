@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  EmojiArt
 //
-//  Created by Виолетточка on 16.01.2023.
+//  Created by andreq on 16.01.2023.
 //
 
 import SwiftUI
@@ -54,8 +54,15 @@ struct EmojiArtDocumentsView: View {
                         Image(systemName: "hourglass").imageScale(.large).spinning()
                     } else {
                         ForEach(self.document.emojis) { emoji in
-                            Text(emoji.text)
-                                .font(animatableWithSize: emoji.fontSize * zoomScale)
+                            Group {
+                                if emoji.isImage {
+                                    OptionalImage(uiImage: self.document.images[emoji.text])
+                                        .scaleEffect(emoji.fontSize * zoomScale)
+                                } else {
+                                    Text(emoji.text)
+                                        .font(animatableWithSize: emoji.fontSize * zoomScale)
+                                }
+                            }
                                 .position(self.position(for: emoji, in: geometry.size))
                                 .gesture(dragEmojiGesture(emoji: emoji, geometry: geometry))
                                 .gesture(zoomEmojiGesture(emoji: emoji))
@@ -92,8 +99,14 @@ struct EmojiArtDocumentsView: View {
                 )
                 .toolbar {
                     Button(action: {
+                        self.document.addImage(UIPasteboard.general.url)
+                }, label: {
+                    Text("Insert image")
+                })
+                }
+                .toolbar {
+                    Button(action: {
                         self.inputInsertText = true
-                        document.addEmoji("Text text", at: CGPoint(x: 0, y: 0), size: 10 * zoomScale)
                 }, label: {
                     Text("Insert text")
                         .sheet(isPresented: $inputInsertText) {
@@ -105,12 +118,10 @@ struct EmojiArtDocumentsView: View {
                                 {
                                     self.inputInsertText = false
                                     textToAdd = ""
-                                    document.addEmoji(textToAdd, at: CGPoint(x: 0, y: 0), size: 10 * zoomScale)
+                                    document.addEmoji(textToAdd, at: CGPoint(x: 0, y: 0), size: defaultEmojiSize * zoomScale)
                                 }, label: {
                                     Text("Insert Text")
                                 })
-                                
-                                
                             }
                             .frame(minWidth: 100, minHeight: 100, alignment: .center)
                         }
@@ -246,6 +257,7 @@ struct EmojiArtDocumentsView: View {
     }
 
 }
+
 
 //struct ContentView_Previews: PreviewProvider {
 //    static var previews: some View {
