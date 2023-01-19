@@ -13,18 +13,10 @@ struct EmojiArtDOcumentChooser: View {
     @State private var selectedDocId: UUID? = nil
     
     var body: some View {
-        NavigationView {
-            List() {
+        NavigationSplitView {
+            List(selection: $selectedDocId) {
                 ForEach(store.documents) { document in
-                    NavigationLink(destination: EmojiArtDocumentsView(document: document)
-                        .navigationBarTitle(self.store.name(for: document))
-                        .toolbar {
-                            Button(action: {
-                                selectedDocId = self.store.addDocument().id
-                            }, label: {
-                                Image(systemName: "plus")
-                            })
-                        }, tag: document.id,selection: $selectedDocId) {
+                    NavigationLink(value: document.id) {
                             EditableText(self.store.name(for: document), isEditing: self.editMode.isEditing) { name in
                                 store.setName(name, for: document)
                             }
@@ -50,9 +42,22 @@ struct EmojiArtDOcumentChooser: View {
             }), trailing: EditButton()
             )
             .environment(\.editMode, $editMode)
-            
+        } detail: {
             if selectedDocId == nil {
                 WelcomeView(selectedDocId: $selectedDocId)
+            } else {
+                let document = store.getById(selectedDocId)!
+                EmojiArtDocumentsView(document: document)
+                    .navigationBarTitle(self.store.name(for: document))
+                    .toolbar {
+                        Button(action: {
+                            selectedDocId = nil
+ 
+//                            selectedDocId = self.store.addDocument().id
+                        }, label: {
+                            Image(systemName: "plus")
+                        })
+                    }
             }
         }
     }

@@ -13,6 +13,8 @@ struct EmojiArtDocumentsView: View {
     @State private var chooserPalette: String = ""
     @State private var explainBackgroundPaste = false
     @State private var confirmBAckgroundPaste = false
+    @State private var inputInsertText = false
+    @State private var textToAdd: String = ""
     
     var backgroundImage: UIImage?
     
@@ -60,7 +62,6 @@ struct EmojiArtDocumentsView: View {
                         }
                     }
                 }
-                
                 .clipped()
                 .gesture(panGesture())
                 .gesture(zoomGesture())
@@ -89,6 +90,33 @@ struct EmojiArtDocumentsView: View {
                             }
                     })
                 )
+                .toolbar {
+                    Button(action: {
+                        self.inputInsertText = true
+                        document.addEmoji("Text text", at: CGPoint(x: 0, y: 0), size: 10 * zoomScale)
+                }, label: {
+                    Text("Insert text")
+                        .sheet(isPresented: $inputInsertText) {
+                            Form {
+                                Section(header: Text("Input text")) {
+                                    TextField("Text", text: $textToAdd)
+                                }
+                                Button(action:
+                                {
+                                    self.inputInsertText = false
+                                    textToAdd = ""
+                                    document.addEmoji(textToAdd, at: CGPoint(x: 0, y: 0), size: 10 * zoomScale)
+                                }, label: {
+                                    Text("Insert Text")
+                                })
+                                
+                                
+                            }
+                            .frame(minWidth: 100, minHeight: 100, alignment: .center)
+                        }
+                        
+                })
+                }
             }
             .alert(isPresented: $confirmBAckgroundPaste) {
                 Alert(title: Text("Paste Background"), message: Text("Replace your background with \(UIPasteboard.general.url?.absoluteString ?? "nothing")?.*"), primaryButton: .default(Text("Ok")) {
